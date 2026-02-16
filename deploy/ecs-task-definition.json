@@ -1,0 +1,82 @@
+{
+  "family": "wanderlog",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+
+  "containerDefinitions": [
+    {
+      "name": "wanderlog",
+
+      "image": "ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/wanderlog:latest",
+
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "protocol": "tcp"
+        }
+      ],
+
+      "environment": [
+        { "name": "GUNICORN_BIND",  "value": "0.0.0.0:8000"               },
+        { "name": "FLASK_ENV",      "value": "production"                  },
+        { "name": "DATABASE_PATH",  "value": "/app/data-db/travel_blog.db" }
+      ],
+
+      "mountPoints": [
+        {
+          "sourceVolume":   "wanderlog-db",
+          "containerPath":  "/app/data-db",
+          "readOnly":       false
+        },
+        {
+          "sourceVolume":   "wanderlog-uploads",
+          "containerPath":  "/app/static/uploads",
+          "readOnly":       false
+        }
+      ],
+
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group":         "/ecs/wanderlog",
+          "awslogs-region":        "REGION",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-create-group":  "true"
+        }
+      },
+
+      "healthCheck": {
+        "command":     ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1"],
+        "interval":    30,
+        "timeout":     10,
+        "retries":     3,
+        "startPeriod": 30
+      },
+
+      "essential": true
+    }
+  ],
+
+  "volumes": [
+    {
+      "name": "wanderlog-db",
+      "efsVolumeConfiguration": {
+        "fileSystemId":          "fs-REPLACE_WITH_YOUR_EFS_ID",
+        "rootDirectory":         "/db",
+        "transitEncryption":     "ENABLED"
+      }
+    },
+    {
+      "name": "wanderlog-uploads",
+      "efsVolumeConfiguration": {
+        "fileSystemId":          "fs-REPLACE_WITH_YOUR_EFS_ID",
+        "rootDirectory":         "/uploads",
+        "transitEncryption":     "ENABLED"
+      }
+    }
+  ]
+}

@@ -20,7 +20,10 @@ except ImportError:
 
 app.secret_key = os.environ.get('SECRET_KEY', 'wanderlog-secret-key-change-in-production')
 
-DATABASE = 'travel_blog.db'
+# Allow overriding DB path via env var so ECS can point it to an EFS mount.
+# Local default: travel_blog.db (project root)
+# ECS: set DATABASE_PATH=/app/data-db/travel_blog.db
+DATABASE = os.environ.get('DATABASE_PATH', 'travel_blog.db')
 UPLOAD_FOLDER = os.path.join('static', 'uploads')
 ALLOWED_IMAGE_EXT = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 ALLOWED_VIDEO_EXT = {'mp4', 'webm', 'ogg', 'mov'}
