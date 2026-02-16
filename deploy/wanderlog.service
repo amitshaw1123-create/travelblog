@@ -1,0 +1,57 @@
+# deploy/wanderlog.service
+# Systemd unit for WanderLog (Flask + Gunicorn)
+# Install: sudo cp wanderlog.service /etc/systemd/system/wanderlog.service
+#          sudo systemctl daemon-reload && sudo systemctl enable wanderlog
+
+[Unit]
+Description=WanderLog Travel Blog (Gunicorn)
+After=network.target
+
+[Service]
+Type=notify
+User=wanderlog
+Group=wanderlog
+WorkingDirectory=/home/ubuntu/travel_blog
+
+# systemd creates /run/wanderlog/ owned by the wanderlog user before startup.
+# This is where the gunicorn Unix socket lives (matches gunicorn.conf.py).
+RuntimeDirectory=wanderlog
+RuntimeDirectoryMode=0755
+
+# ── Base environment (safe to keep here) ──────────────────────────────────────
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=FLASK_ENV=production
+
+# ── Secrets ────────────────────────────────────────────────────────────────────
+# Do NOT put SECRET_KEY or ANTHROPIC_API_KEY in this file.
+# Instead run: sudo systemctl edit wanderlog
+# Then add under [Service]:
+#   Environment=SECRET_KEY=<your-random-32-char-string>
+#   Environment=ANTHROPIC_API_KEY=sk-ant-...
+# That creates a drop-in at /etc/systemd/system/wanderlog.service.d/override.conf
+# which is never committed to version control.
+
+ExecStart=/home/ubuntu/travel_blog/.venv/bin/gunicorn \
+    -c /home/ubuntu/travel_blog/gunicorn.conf.py \
+    app:app
+
+Restart=on-failure
+RestartSec=5s
+
+# ── Resource limits ────────────────────────────────────────────────────────────
+MemoryMax=512M
+LimitNOFILE=65536
+
+# ── Security hardening ─────────────────────────────────────────────────────────
+NoNewPrivileges=true
+PrivateTmp=true
+ReadWritePaths=/home/ubuntu/travel_blog /run/wanderlog
+
+# ── Logging ────────────────────────────────────────────────────────────────────
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=wanderlog
+
+[Install]
+WantedBy=multi-user.target

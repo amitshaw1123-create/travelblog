@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+{% block title %}New Travel Story – WanderLog{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+
+      <!-- ── AI Writer Panel ── -->
+      <div class="card border-0 shadow-sm mb-4" style="border-left: 4px solid #6f42c1 !important;">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center justify-content-between mb-1">
+            <h5 class="mb-0">
+              <i class="fas fa-robot me-2" style="color:#6f42c1"></i>AI Post Writer
+              <span class="badge bg-purple ms-2" style="background:#6f42c1;font-size:.7rem;">Powered by Claude</span>
+            </h5>
+            <button class="btn btn-sm btn-outline-secondary" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#aiWriterBody">
+              <i class="fas fa-chevron-down"></i>
+            </button>
+          </div>
+          <p class="text-muted small mb-0">Give Claude a destination and a few bullet points — get a full draft in seconds.</p>
+
+          <div class="collapse show mt-3" id="aiWriterBody">
+            <div class="mb-3">
+              <label class="form-label fw-semibold small">Destination <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-map-marker-alt text-danger"></i></span>
+                <input type="text" id="ai-destination" class="form-control"
+                       placeholder="e.g., Kyoto, Japan" />
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold small">Key Highlights <span class="text-muted fw-normal">(one per line)</span></label>
+              <textarea id="ai-highlights" class="form-control" rows="4"
+                        placeholder="Visited Fushimi Inari at sunrise&#10;Ate ramen in a tiny back-alley shop&#10;Got lost in Arashiyama bamboo grove"></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold small">Writing Style</label>
+              <select id="ai-style" class="form-select">
+                <option value="adventurous">Adventurous — exciting &amp; inspiring</option>
+                <option value="informative">Informative — practical &amp; detailed</option>
+                <option value="poetic">Poetic — lyrical &amp; atmospheric</option>
+              </select>
+            </div>
+
+            <button id="ai-generate-btn" type="button" class="btn btn-sm px-4"
+                    style="background:#6f42c1;color:#fff;">
+              <i class="fas fa-magic me-2"></i>Generate Draft
+            </button>
+
+            <!-- Result area -->
+            <div id="ai-result" class="mt-3 d-none">
+              <div id="ai-error" class="alert alert-danger d-none"></div>
+              <div id="ai-preview" class="d-none">
+                <div class="alert alert-success py-2 mb-2">
+                  <i class="fas fa-check-circle me-1"></i>Draft ready! Review below, then click <strong>Use this Draft</strong>.
+                </div>
+                <div class="mb-2">
+                  <label class="form-label fw-semibold small">Generated Title</label>
+                  <div id="ai-preview-title" class="form-control bg-light text-dark"></div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label fw-semibold small">Generated Content</label>
+                  <textarea id="ai-preview-content" class="form-control bg-light" rows="8" readonly></textarea>
+                </div>
+                <button id="ai-use-btn" type="button" class="btn btn-success btn-sm px-4">
+                  <i class="fas fa-file-import me-2"></i>Use this Draft
+                </button>
+              </div>
+            </div>
+
+          </div><!-- /collapse -->
+        </div>
+      </div>
+      <!-- ── End AI Writer Panel ── -->
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4 p-md-5">
+          <h2 class="mb-1"><i class="fas fa-pen-fancy me-2 text-primary"></i>New Travel Story</h2>
+          <p class="text-muted mb-4">Share your latest adventure with the world</p>
+
+          <form method="POST" enctype="multipart/form-data">
+
+            <!-- Title -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Title <span class="text-danger">*</span></label>
+              <input type="text" name="title" class="form-control form-control-lg"
+                     placeholder="Give your adventure a title…" required />
+            </div>
+
+            <!-- Destination -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Destination</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-map-marker-alt text-danger"></i></span>
+                <input type="text" name="destination" class="form-control"
+                       placeholder="e.g., Bali, Indonesia" />
+              </div>
+            </div>
+
+            <!-- Content -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Your Story <span class="text-danger">*</span></label>
+              <textarea name="content" class="form-control" rows="14"
+                        placeholder="Tell your story…" required></textarea>
+              <small class="text-muted">Tip: Press Enter for new paragraphs.</small>
+            </div>
+
+            <hr class="my-4" />
+            <h6 class="text-muted text-uppercase mb-3"><i class="fas fa-paperclip me-2"></i>Media</h6>
+
+            <!-- Cover Image -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Cover Image</label>
+              <input type="file" name="cover_image" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp" />
+              <small class="text-muted">Shown as the card thumbnail. Supported: JPG, PNG, GIF, WebP.</small>
+            </div>
+
+            <!-- Gallery Images -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Additional Photos</label>
+              <input type="file" name="images" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp" multiple />
+              <small class="text-muted">Select multiple photos to build a gallery section.</small>
+            </div>
+
+            <!-- Videos -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Upload Videos</label>
+              <input type="file" name="videos" class="form-control" accept=".mp4,.webm,.ogg,.mov" multiple />
+              <small class="text-muted">Supported: MP4, WebM, OGG, MOV — max 200 MB per file.</small>
+            </div>
+
+            <!-- YouTube URL -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold">YouTube URL</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fab fa-youtube text-danger"></i></span>
+                <input type="url" name="youtube_url" class="form-control"
+                       placeholder="https://www.youtube.com/watch?v=…" />
+              </div>
+            </div>
+
+            <div class="d-flex gap-3 pt-2">
+              <button type="submit" class="btn btn-primary btn-lg px-5">
+                <i class="fas fa-paper-plane me-2"></i>Publish Story
+              </button>
+              <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-lg">Cancel</a>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  const generateBtn  = document.getElementById('ai-generate-btn');
+  const useBtn       = document.getElementById('ai-use-btn');
+  const resultDiv    = document.getElementById('ai-result');
+  const errorDiv     = document.getElementById('ai-error');
+  const previewDiv   = document.getElementById('ai-preview');
+  const previewTitle = document.getElementById('ai-preview-title');
+  const previewBody  = document.getElementById('ai-preview-content');
+
+  generateBtn.addEventListener('click', async function () {
+    const destination = document.getElementById('ai-destination').value.trim();
+    const highlights  = document.getElementById('ai-highlights').value.trim();
+    const style       = document.getElementById('ai-style').value;
+
+    if (!destination) {
+      showError('Please enter a destination before generating.');
+      return;
+    }
+
+    // Show loading state
+    generateBtn.disabled = true;
+    generateBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Generating…';
+    resultDiv.classList.remove('d-none');
+    errorDiv.classList.add('d-none');
+    previewDiv.classList.add('d-none');
+
+    try {
+      const formData = new FormData();
+      formData.append('destination', destination);
+      formData.append('highlights',  highlights);
+      formData.append('style',       style);
+
+      const response = await fetch('{{ url_for("ai_draft") }}', {
+        method: 'POST',
+        body:   formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || data.error) {
+        showError(data.error || 'Something went wrong. Please try again.');
+        return;
+      }
+
+      // Show the preview
+      previewTitle.textContent = data.title;
+      previewBody.value        = data.content;
+      previewDiv.classList.remove('d-none');
+
+    } catch (err) {
+      showError('Network error — check your connection and try again.');
+    } finally {
+      generateBtn.disabled = false;
+      generateBtn.innerHTML = '<i class="fas fa-magic me-2"></i>Generate Draft';
+    }
+  });
+
+  useBtn.addEventListener('click', function () {
+    document.querySelector('input[name="title"]').value         = previewTitle.textContent;
+    document.querySelector('textarea[name="content"]').value    = previewBody.value;
+    document.querySelector('input[name="destination"]').value   =
+        document.getElementById('ai-destination').value.trim();
+
+    // Scroll down to the form and briefly highlight it
+    const form = document.querySelector('input[name="title"]');
+    form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    form.classList.add('border-success');
+    setTimeout(() => form.classList.remove('border-success'), 2000);
+  });
+
+  function showError(msg) {
+    resultDiv.classList.remove('d-none');
+    errorDiv.textContent = msg;
+    errorDiv.classList.remove('d-none');
+    previewDiv.classList.add('d-none');
+  }
+})();
+</script>
+{% endblock %}

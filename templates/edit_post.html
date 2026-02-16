@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block title %}Edit Story – WanderLog{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4 p-md-5">
+          <h2 class="mb-1"><i class="fas fa-edit me-2 text-primary"></i>Edit Travel Story</h2>
+          <p class="text-muted mb-4">Update your post details and media</p>
+
+          <form method="POST" enctype="multipart/form-data">
+
+            <!-- Title -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Title <span class="text-danger">*</span></label>
+              <input type="text" name="title" class="form-control form-control-lg"
+                     value="{{ post['title'] }}" required />
+            </div>
+
+            <!-- Destination -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Destination</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-map-marker-alt text-danger"></i></span>
+                <input type="text" name="destination" class="form-control"
+                       value="{{ post['destination'] or '' }}" placeholder="e.g., Bali, Indonesia" />
+              </div>
+            </div>
+
+            <!-- Content -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Your Story <span class="text-danger">*</span></label>
+              <textarea name="content" class="form-control" rows="14" required>{{ post['content'] }}</textarea>
+            </div>
+
+            <hr class="my-4" />
+            <h6 class="text-muted text-uppercase mb-3"><i class="fas fa-paperclip me-2"></i>Media</h6>
+
+            <!-- Current cover -->
+            {% if post['cover_image'] %}
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Current Cover Image</label>
+              <div>
+                <img src="{{ url_for('static', filename=post['cover_image']) }}"
+                     class="img-thumbnail" style="max-height:180px;" alt="Cover" />
+              </div>
+            </div>
+            {% endif %}
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Replace Cover Image</label>
+              <input type="file" name="cover_image" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp" />
+            </div>
+
+            <!-- Current gallery -->
+            {% if images %}
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Current Gallery Photos</label>
+              <div class="d-flex flex-wrap gap-2 mt-1">
+                {% for img in images %}
+                <div class="position-relative">
+                  <img src="{{ url_for('static', filename=img['file_path']) }}"
+                       class="img-thumbnail" style="height:90px;width:90px;object-fit:cover;" />
+                  <form action="{{ url_for('delete_image', image_id=img['id']) }}" method="POST">
+                    <button type="submit" class="btn btn-danger btn-sm position-absolute top-0 end-0 p-0 px-1"
+                            style="font-size:.7rem;line-height:1.4;"
+                            onclick="return confirm('Remove this photo?')" title="Remove">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </form>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Add More Photos</label>
+              <input type="file" name="images" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp" multiple />
+            </div>
+
+            <!-- Current videos -->
+            {% if videos %}
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Current Videos</label>
+              <div class="row g-3 mt-1">
+                {% for vid in videos %}
+                <div class="col-md-6">
+                  <video class="w-100 rounded" style="max-height:130px" controls>
+                    <source src="{{ url_for('static', filename=vid['file_path']) }}" />
+                  </video>
+                  <form action="{{ url_for('delete_video', video_id=vid['id']) }}" method="POST" class="mt-1">
+                    <button type="submit" class="btn btn-danger btn-sm w-100"
+                            onclick="return confirm('Remove this video?')">
+                      <i class="fas fa-trash me-1"></i>Remove
+                    </button>
+                  </form>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Upload More Videos</label>
+              <input type="file" name="videos" class="form-control" accept=".mp4,.webm,.ogg,.mov" multiple />
+              <small class="text-muted">Max 200 MB per file.</small>
+            </div>
+
+            <!-- YouTube URL -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold">YouTube URL</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fab fa-youtube text-danger"></i></span>
+                <input type="url" name="youtube_url" class="form-control"
+                       value="{{ post['youtube_url'] or '' }}"
+                       placeholder="https://www.youtube.com/watch?v=…" />
+              </div>
+            </div>
+
+            <div class="d-flex gap-3 pt-2">
+              <button type="submit" class="btn btn-primary btn-lg px-5">
+                <i class="fas fa-save me-2"></i>Save Changes
+              </button>
+              <a href="{{ url_for('post', slug=post['slug']) }}" class="btn btn-outline-secondary btn-lg">Cancel</a>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

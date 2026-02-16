@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% block title %}{{ post['title'] }} – WanderLog{% endblock %}
+
+{% block content %}
+
+<!-- ── Post Hero ── -->
+<div class="post-hero {% if post['cover_image'] %}has-cover{% endif %}">
+  {% if post['cover_image'] %}
+  <div class="post-hero-bg"
+       style="background-image: url('{{ url_for('static', filename=post['cover_image']) }}')"></div>
+  {% endif %}
+  <div class="post-hero-overlay">
+    <div class="container">
+      <div class="col-lg-8 mx-auto text-white">
+        {% if post['destination'] %}
+        <p class="dest-tag mb-2">
+          <i class="fas fa-map-marker-alt me-1"></i>{{ post['destination'] }}
+        </p>
+        {% endif %}
+        <h1 class="post-hero-title display-4 fw-bold">{{ post['title'] }}</h1>
+        <div class="d-flex flex-wrap align-items-center gap-3 mt-3 post-meta-bar">
+          <span><i class="far fa-calendar me-1"></i>{{ post['created_at'][:10] }}</span>
+          {% if comments %}
+          <span>
+            {% set a = avg_rating %}
+            {% for i in range(1, 6) %}
+              {% if i <= a %}<i class="fas fa-star text-warning small"></i>
+              {% elif (i - 0.5) <= a %}<i class="fas fa-star-half-alt text-warning small"></i>
+              {% else %}<i class="far fa-star text-warning small"></i>{% endif %}
+            {% endfor %}
+            <span class="ms-1">{{ "%.1f"|format(avg_rating) }}
+              ({{ comments|length }} review{{ 's' if comments|length != 1 }})</span>
+          </span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Main content ── -->
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+
+      <!-- Admin bar -->
+      {% if session.get('logged_in') %}
+      <div class="admin-bar mb-4">
+        <span class="text-muted small me-3"><i class="fas fa-user-shield me-1"></i>Admin mode</span>
+        <a href="{{ url_for('edit_post', post_id=post['id']) }}" class="btn btn-sm btn-outline-secondary me-2">
+          <i class="fas fa-edit me-1"></i>Edit
+        </a>
+        <form action="{{ url_for('delete_post', post_id=post['id']) }}" method="POST" class="d-inline">
+          <button type="submit" class="btn btn-sm btn-outline-danger"
+                  onclick="return confirm('Permanently delete this post?')">
+            <i class="fas fa-trash me-1"></i>Delete
+          </button>
+        </form>
+      </div>
+      {% endif %}
+
+      <!-- Story text -->
+      <article class="post-content mb-5">
+        {{ post['content'] | nl2br | safe }}
+      </article>
+
+      <!-- ── Photo Gallery ── -->
+      {% if images %}
+      <section class="mb-5">
+        <h4 class="section-sub-title mb-3">
+          <i class="fas fa-images me-2 text-primary"></i>Photo Gallery
+        </h4>
+        <div class="gallery-grid">
+          {% for img in images %}
+          <div class="gallery-item" onclick="openLightbox('{{ url_for('static', filename=img['file_path']) }}')">
+            <img src="{{ url_for('static', filename=img['file_path']) }}" alt="Photo" loading="lazy" />
+            <div class="gallery-overlay"><i class="fas fa-expand-alt"></i></div>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      <!-- ── Videos ── -->
+      {% if post['youtube_url'] or videos %}
+      <section class="mb-5">
+        <h4 class="section-sub-title mb-3">
+          <i class="fas fa-video me-2 text-primary"></i>Videos
+        </h4>
+
+        {% if post['youtube_url'] %}
+        <div class="ratio ratio-16x9 rounded overflow-hidden mb-4 shadow-sm">
+          <iframe src="{{ post['youtube_url'] | youtube_embed }}"
+                  allowfullscreen loading="lazy"></iframe>
+        </div>
+        {% endif %}
+
+        {% for vid in videos %}
+        <div class="mb-4">
+          <video controls class="w-100 rounded shadow-sm" style="max-height:420px">
+            <source src="{{ url_for('static', filename=vid['file_path']) }}" />
+            Your browser does not support video playback.
+          </video>
+        </div>
+        {% endfor %}
+      </section>
+      {% endif %}
+
+      <hr class="my-5" />
+
+      <!-- ── Comments ── -->
+      <section id="comments">
+        <h3 class="mb-4">
+          <i class="fas fa-comments me-2 text-primary"></i>Reviews &amp; Comments
+          {% if comments %}
+          <span class="badge bg-primary ms-1">{{ comments|length }}</span>
+          {% endif %}
+        </h3>
+
+        {% if comments %}
+        <div class="mb-5">
+          {% for c in comments %}
+          <div class="comment-card mb-3 p-4 rounded-3">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+              <div class="d-flex align-items-center gap-3">
+                <div class="avatar-circle">{{ c['name'][0].upper() }}</div>
+                <div>
+                  <h6 class="mb-0 fw-bold">{{ c['name'] }}</h6>
+                  <small class="text-muted">{{ c['created_at'][:16].replace('T', ' ') }}</small>
+                </div>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <div>
+                  {% for i in range(1, 6) %}
+                  <i class="{{ 'fas' if i <= c['rating'] else 'far' }} fa-star text-warning small"></i>
+                  {% endfor %}
+                </div>
+                {% if session.get('logged_in') %}
+                <form action="{{ url_for('delete_comment', comment_id=c['id']) }}" method="POST">
+                  <button class="btn btn-sm btn-outline-danger py-0 px-1"
+                          onclick="return confirm('Delete this comment?')" title="Delete">
+                    <i class="fas fa-times small"></i>
+                  </button>
+                </form>
+                {% endif %}
+              </div>
+            </div>
+            <p class="mt-3 mb-0 comment-text">{{ c['comment'] }}</p>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-4 mb-5">
+          <i class="far fa-comment-dots display-4 d-block mb-3"></i>
+          <p>Be the first to share your thoughts!</p>
+        </div>
+        {% endif %}
+
+        <!-- ── Leave a review ── -->
+        <div id="leave-review" class="review-form-card p-4 p-md-5 rounded-3">
+          <h5 class="mb-4"><i class="fas fa-pen me-2"></i>Leave a Review</h5>
+          <form action="{{ url_for('add_comment', slug=post['slug']) }}" method="POST">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-medium">Your Name <span class="text-danger">*</span></label>
+                <input type="text" name="name" class="form-control" placeholder="John Doe" required />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-medium">Email <small class="text-muted">(optional)</small></label>
+                <input type="email" name="email" class="form-control" placeholder="you@example.com" />
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-medium">Rating <span class="text-danger">*</span></label>
+                <div class="star-picker" id="starPicker">
+                  <i class="far fa-star" data-value="1"></i>
+                  <i class="far fa-star" data-value="2"></i>
+                  <i class="far fa-star" data-value="3"></i>
+                  <i class="far fa-star" data-value="4"></i>
+                  <i class="far fa-star" data-value="5"></i>
+                </div>
+                <input type="hidden" name="rating" id="ratingHidden" value="5" />
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-medium">Your Review <span class="text-danger">*</span></label>
+                <textarea name="comment" class="form-control" rows="5" required
+                          placeholder="Share your thoughts about this travel story…"></textarea>
+              </div>
+              <div class="col-12">
+                <button type="submit" class="btn btn-primary px-5">
+                  <i class="fas fa-paper-plane me-2"></i>Submit Review
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- ── Lightbox ── -->
+<div id="lightbox" class="lightbox" onclick="closeLightbox()">
+  <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+  <img id="lightboxImg" src="" alt="Full size" />
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Initialise star picker with default = 5
+  document.addEventListener('DOMContentLoaded', () => initStarPicker(5));
+</script>
+{% endblock %}

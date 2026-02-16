@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Local secrets — never bake into the image
+.env
+
+# Local database — mounted as a bind volume on EC2
+travel_blog.db
+
+# Uploaded media — mounted as a bind volume on EC2
+static/uploads/
+
+# Git
+.git/
+.gitignore
+
+# CI/CD (not needed inside the image)
+.github/
+
+# Editor
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

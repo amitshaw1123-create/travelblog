@@ -1,0 +1,29 @@
+services:
+
+  # ── Flask + Gunicorn ─────────────────────────────────────────────────────────
+  web:
+    build: .
+    expose:
+      - "8000"             # Only inside Docker network — nginx is the entry point
+    volumes:
+      - ./travel_blog.db:/app/travel_blog.db        # persistent SQLite DB
+      - ./static/uploads:/app/static/uploads         # persistent media uploads
+    env_file:
+      - .env               # ANTHROPIC_API_KEY, SECRET_KEY, ADMIN_PASSWORD, etc.
+    environment:
+      - GUNICORN_BIND=0.0.0.0:8000
+      - FLASK_ENV=production
+    restart: unless-stopped
+
+  # ── nginx reverse proxy ───────────────────────────────────────────────────────
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "80:80"            # Access at http://localhost  (mirrors EC2 production)
+    volumes:
+      - ./deploy/nginx-compose.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./static:/app/static:ro            # serves CSS/JS/images directly
+      - ./static/uploads:/app/static/uploads:ro     # uploads, read-only for nginx
+    depends_on:
+      - web
+    restart: unless-stopped
