@@ -1,0 +1,18 @@
+# Copy this file to terraform.tfvars and fill in your values
+# terraform.tfvars is gitignored and will not be committed
+
+aws_region = "us-east-1"
+
+# Generate with: python3 -c "import secrets; print(secrets.token_hex(32))"
+secret_key = "your-64-character-hex-string-here"
+
+# Your Anthropic API key
+anthropic_api_key = "sk-ant-your-key-here"
+
+# Optional: customize these if needed
+# ecr_repository_name = "wanderlog"
+# ecs_cluster_name    = "wanderlog-cluster"
+# ecs_service_name    = "wanderlog-service"
+# task_cpu            = "256"
+# task_memory         = "512"
+# desired_count       = 1
