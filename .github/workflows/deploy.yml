@@ -52,8 +52,6 @@ jobs:
           IMAGE_TAG:      ${{ github.sha }}
         run: |
           docker build \
-            --cache-from type=gha \
-            --cache-to   type=gha,mode=max \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
             .
@@ -61,11 +59,8 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      # ── 6. Render task definition with new image + secrets ───────────────────
-      # Injects the new image URI and runtime secrets into the task definition.
-      # Required GitHub secrets:
-      #   SECRET_KEY        — Flask secret key
-      #   ANTHROPIC_API_KEY — sk-ant-...
+      # ── 6. Render task definition with new image ─────────────────────────────
+      # Secrets are injected via AWS Secrets Manager (see task definition)
       - name: Render ECS task definition
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
@@ -73,9 +68,6 @@ jobs:
           task-definition: deploy/ecs-task-definition.json
           container-name:  wanderlog
           image:           ${{ steps.build-image.outputs.image }}
-          environment-variables: |
-            SECRET_KEY=${{ secrets.SECRET_KEY }}
-            ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
 
       # ── 7. Deploy to ECS ──────────────────────────────────────────────────────
       # Registers the new task definition revision and updates the service.
